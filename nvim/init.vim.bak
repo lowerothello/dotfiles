@@ -1,0 +1,103 @@
+call plug#begin('$XDG_DATA_HOME/nvim/plugged')
+	Plug 'bronson/vim-visual-star-search'
+	Plug 'kana/vim-smartword'
+	Plug 'bkad/camelcasemotion'
+	Plug 'cohama/lexima.vim'
+	Plug 'nvim-treesitter/nvim-treesitter', { 'do': ':TSUpdate' }
+	Plug 'numtostr/comment.nvim'
+	Plug 'farmergreg/vim-lastplace'
+call plug#end()
+
+colorscheme wal
+
+set nowrap
+set mousemodel=extend
+set scrolloff=999
+set sidescrolloff=999
+set mousetime=0
+set number
+set undofile
+set ignorecase
+set smartcase
+
+set listchars=tab:│\ ,lead:!,trail:.,nbsp:+,extends:$,precedes:^
+set list
+
+set tabstop=4
+set softtabstop=0
+set shiftwidth=4
+
+nmap Y vg_y
+
+" vim treats *.h files as cpp by default
+autocmd BufRead,BufNewFile *.h set filetype=c
+
+
+" lexima
+let s = '\|'
+let lexMain = '^'.s.'$'.s.' '.s.'_'.s.'\.'.s.','.s.';'.s.':'.s.'+'.s.'-'.s.'='.s.'/'.s.'*'.s.'&'.s.'|'.s.'<'.s.'>'.s.'\^'
+let lexBracketOpen  = '('.s.'{'.s.'\['
+let lexBracketClose = ')'.s.'}'.s.']'
+
+let g:lexima_no_default_rules = 1
+call lexima#clear_rules()
+
+" brackets
+call lexima#add_rule({'char': ')', 'at': '\%#)', 'leave': 1})
+call lexima#add_rule({'char': '}', 'at': '\%#}', 'leave': 1})
+call lexima#add_rule({'char': ']', 'at': '\%#]', 'leave': 1})
+call lexima#add_rule({'char': '(', 'at': '\%#\('.lexMain.s.lexBracketClose.s."'".s.'"\)', 'input_after': ')'})
+call lexima#add_rule({'char': '{', 'at': '\%#\('.lexMain.s.lexBracketClose.s."'".s.'"\)', 'input_after': '}'})
+call lexima#add_rule({'char': '[', 'at': '\%#\('.lexMain.s.lexBracketClose.s."'".s.'"\)', 'input_after': ']'})
+call lexima#add_rule({'char': '<BS>', 'at':  '(\%#)', 'delete': 1})
+call lexima#add_rule({'char': '<BS>', 'at':  '{\%#}', 'delete': 1})
+call lexima#add_rule({'char': '<BS>', 'at': '\[\%#]', 'delete': 1})
+call lexima#add_rule({'char': '<Space>', 'at':  '(\%#)', 'input_after': ' '})
+call lexima#add_rule({'char': '<Space>', 'at':  '{\%#}', 'input_after': ' '})
+call lexima#add_rule({'char': '<Space>', 'at': '\[\%#]', 'input_after': ' '})
+call lexima#add_rule({'char': '<CR>', 'at':  '(\%#', 'input_after': '<CR>'})
+call lexima#add_rule({'char': '<CR>', 'at':  '{\%#', 'input_after': '<CR>'})
+call lexima#add_rule({'char': '<CR>', 'at': '\[\%#', 'input_after': '<CR>'})
+
+
+" vimscript comments
+call lexima#add_rule({'char': '"', 'at': '^\s*\%#', 'filetype': 'vim'})
+call lexima#add_rule({'char': '"', 'at': '\%#\s*$', 'filetype': 'vim'})
+
+" quotes
+call lexima#add_rule({'char': '"', 'at': '\%#"',  'leave': 1})
+call lexima#add_rule({'char': "'", 'at': '\%#''', 'leave': 1})
+call lexima#add_rule({'char': '"', 'at': '\('.lexMain.s.lexBracketOpen.s.'''\)\%#\('.lexMain.s.lexBracketClose.s.'''\)', 'input_after': '"'})
+call lexima#add_rule({'char': "'", 'at': '\('.lexMain.s.lexBracketOpen.s. '"\)\%#\('.lexMain.s.lexBracketClose.s. '"\)', 'input_after': "'"})
+call lexima#add_rule({'char': '<BS>', 'at':  '"\%#"',  'delete': 1})
+call lexima#add_rule({'char': '<BS>', 'at': '''\%#''', 'delete': 1})
+
+" comments
+call lexima#add_rule({'char': ' ',    'at':  '/\*\%#', 'input_after': ' */'})
+call lexima#add_rule({'char': '<BS>', 'at': '/\* \%#', 'delete': 3, 'input': '<BS><BS><BS>'})
+
+
+" smartword
+map <Plug>(smartword-basic-w) <Plug>CamelCaseMotion_w
+map <Plug>(smartword-basic-b) <Plug>CamelCaseMotion_b
+map <Plug>(smartword-basic-e) <Plug>CamelCaseMotion_e
+
+map w  <Plug>(smartword-w)
+map b  <Plug>(smartword-b)
+map e  <Plug>(smartword-e)
+map ge <Plug>(smartword-ge)
+
+
+" comment
+lua require('Comment').setup()
+
+
+" treesitter
+lua << EOF
+require ("nvim-treesitter.configs").setup
+{
+	highlight = { enable = true },
+	indent = { enable = false },
+	incremental_selection = { enable = false },
+}
+EOF
